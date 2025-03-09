@@ -1,0 +1,50 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+body {
+  padding: 0;
+  margin: 0;
+  background-color: #4caf50;
+}
+/* Stiluri generale pentru navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #169400;
+  padding: 1rem 2rem;
+  width: 100%;
+  height: auto;
+}
+/* Logo */
+.logo {
+  color: rgb(250, 250, 250);
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-style: oblique;
+}
+.navLinks {
+  display: flex;
+  list-style: none;
+  margin-right: 50px;
+}
+.navLinks li button {
+  margin-left: 2.5rem;
+  background-color: #fff;
+  color: #4caf50;
+  width: 80px;
+  height: 35px;
+  font-size: 1rem;
+  font-weight: bolder;
+  font-style: oblique;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+.navLinks li button:hover {
+  background-color: #388e3c;
+  color: #fff;
+  border: 1px solid #fff;
+}
