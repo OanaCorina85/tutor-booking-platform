@@ -10,15 +10,15 @@ router.post("/send-booking-email", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail", // Use your email provider (e.g., Gmail, Outlook)
       auth: {
-        user: "your-email@gmail.com", // Replace with your email
-        pass: "your-email-password", // Replace with your email password or app password
+        user: "oanacorinatrifon@gmail.com", // Replace with your email
+        pass: "salatanoua9", // Replace with your email password or app password
       },
     });
 
     // Email content
     const mailOptions = {
       from: "your-email@gmail.com",
-      to: "your-email@gmail.com", // Replace with the recipient's email
+      to: "oanacorinatrifon@gmail.com", // Replace with the recipient's email
       subject: "New Booking Request",
       text: `
         You have received a new booking request:
