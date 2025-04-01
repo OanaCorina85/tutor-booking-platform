@@ -1,4 +1,4 @@
-import { authInstance } from "./config";
+import { authInstance } from "./config.js";
 
 const userEntity = {
   // Tip: Register
@@ -20,22 +20,16 @@ const userEntity = {
         success: true,
       };
     } catch (error) {
-      console.log(`[API]: Failed to register user. Error: ${error.message}`);
-      return {
-        data: null,
-        success: false,
-      };
+      console.error("Error signing up:", error.message);
+      throw error;
     }
   },
-  // Tip: Login
   signIn: async (payload) => {
     try {
-      //   Tip: payload example = { email: "john@myemail.com", password: "....." }
       const response = await authInstance.post("/accounts:signInWithPassword", {
         ...payload,
         returnSecureToken: true,
       });
-
       return {
         data: {
           idToken: response.data.idToken,
@@ -43,16 +37,12 @@ const userEntity = {
           refreshToken: response.data.refreshToken,
           expiresIn: response.data.expiresIn,
           localId: response.data.localId,
-          registered: response.data.registered,
         },
         success: true,
       };
     } catch (error) {
-      console.log(`[API]: Failed to login user. Error: ${error.message}`);
-      return {
-        data: null,
-        success: false,
-      };
+      console.error("Error signing in:", error.message);
+      throw error;
     }
   },
 };

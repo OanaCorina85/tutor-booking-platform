@@ -4,19 +4,24 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "dev:backend": "node src/api/index.js",
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "nodemailer": "^6.10.0",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",
     "react-datepicker": "^8.2.1",
     "react-dom": "^19.0.0",
     "react-router": "^7.2.0",
-    "react-router-dom": "^6.30.0",
+    "react-router-dom": "^7.4.1",
+    "react-toastify": "^11.0.5",
     "styled-components": "^6.1.15"
   },
   "devDependencies": {

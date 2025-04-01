@@ -1,10 +1,19 @@
 import axios from "axios";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const variables = {
-  firebaseApiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  databaseUrl: import.meta.env.VITE_DATABASE_URL,
-  authApiUrl: import.meta.env.VITE_AUTH_API_URL,
+  // eslint-disable-next-line no-undef
+  firebaseApiKey: process.env.VITE_FIREBASE_API_KEY,
+  // eslint-disable-next-line no-undef
+  databaseUrl: process.env.VITE_DATABASE_URL,
+  // eslint-disable-next-line no-undef
+  authApiUrl: process.env.VITE_AUTH_API_URL,
 };
+
+console.log("Environment Variables:", variables);
 
 const dbInstance = axios.create({
   baseURL: variables.databaseUrl,
@@ -15,7 +24,6 @@ const authInstance = axios.create({
   baseURL: variables.authApiUrl,
   timeout: 1000,
   params: {
-    // https://identitytoolkit.googleapis.com/v1/accounts:?key=......
     key: variables.firebaseApiKey,
   },
 });

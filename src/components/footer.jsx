@@ -9,8 +9,12 @@ const Footer = () => (
     </p>
   </Container>
 );
+
 const Container = styled.footer`
   display: flex;
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center items horizontally */
+  justify-content: center; /* Center items vertically */
   background-color: #f5f5f5;
   padding: 20px;
   text-align: center;
@@ -19,7 +23,7 @@ const Container = styled.footer`
   color: #333;
   margin-top: 10px;
   border-top: 1px solid #ccc;
-  position: absolute;
+  position: fixed; /* Fix the footer to the bottom of the viewport */
   bottom: 0;
   width: 100%;
 

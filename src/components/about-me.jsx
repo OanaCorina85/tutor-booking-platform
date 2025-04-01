@@ -17,17 +17,24 @@ const AboutMe = () => {
 
 const Container = styled.section`
   display: flex;
+  flex-direction: column;
+  align-items: center;
 
   img {
     width: 150px;
     height: 150px;
     margin-top: 1rem;
+    border-radius: 50%; /* Makes the image round */
+    object-fit: cover; /* Ensures the image fits within the circle */
   }
+
   h1 {
     display: flex;
     flex-direction: column;
-    align-items: top;
-    justify-content: top;
+    align-items: center;
+    justify-content: center;
+    text-overflow: ellipsis;
+    overflow: visible;
     margin: 0 auto;
   }
 
@@ -35,6 +42,8 @@ const Container = styled.section`
     font-size: 2rem;
     margin-bottom: 1rem;
     text-align: center;
+    align-items: center;
+    justify-content: center;
   }
 `;
 

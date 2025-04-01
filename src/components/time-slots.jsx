@@ -86,7 +86,7 @@ const Container = styled.div`
   max-width: 600px;
   gap: 10px;
   max-height: 600px;
-  overflow-y: auto;
+  overflow: visible;
 
   p {
     display: flex;

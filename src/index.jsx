@@ -3,17 +3,15 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AppointmentsProvider } from './pages/appointmentsContext';
-import BookingForm from './pages/bookingClientForm'; // Importăm BookingForm
+import BookingForm from './pages/bookingForm'; 
 import HomePage from './pages/home.page';
 import TemplatePage from './pages/template.page';
-import SchedulePage from './pages/programariClienti';
-
+import SchedulePage from './pages/clientsBookings';
 import hocs from './common/hocs';
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppointmentsProvider>
       <BrowserRouter>
         <Routes>
           <Route index={true} element={<HomePage />} />
@@ -23,6 +21,6 @@ createRoot(document.getElementById('root')).render(
 
         </Routes>
       </BrowserRouter>
-    </AppointmentsProvider>
   </StrictMode>
 );
+
