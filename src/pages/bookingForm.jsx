@@ -7,15 +7,12 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
     email: "",
     message: "",
   });
-
-  const [isFormVisible] = useState(true); // To toggle form visibility
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // State for error message
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -24,14 +21,14 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
     const bookingDetails = {
       name: formData.name,
       email: formData.email,
-      date: selectedDate,
-      time: selectedTime,
+      date: selectedDate || "2025-04-01",
+      time: selectedTime || "10:00 AM",
       message: formData.message,
     };
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/send-booking-email",
+        "http://localhost:5001/api/email/send-booking-email",
         {
           method: "POST",
           headers: {
@@ -42,18 +39,21 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
       );
 
       if (response.ok) {
+        setSuccessMessage("Booking request sent successfully!");
+        setErrorMessage(""); // Clear any previous error message
         onBook(bookingDetails); // Call the onBook function to handle success
-        alert("Booking request sent successfully!");
       } else {
-        alert("Failed to send booking request.");
+        const errorData = await response.json();
+        setErrorMessage(`Failed to send booking request: ${errorData.message}`);
+        setSuccessMessage(""); // Clear any previous success message
       }
     } catch (error) {
       console.error("Error sending booking request:", error);
-      alert("An error occurred while sending the booking request.");
+      setErrorMessage("An error occurred while sending the booking request.");
+      setSuccessMessage(""); // Clear any previous success message
     }
   };
 
-  // Check if selectedDate and selectedTime are available
   if (!selectedDate || !selectedTime) {
     return (
       <FormContainer>
@@ -66,50 +66,44 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
     <FormContainer>
       <h3>Confirm Your Appointment</h3>
       <p>
-        <strong>Date:</strong> {selectedDate}
+        <strong>Date:</strong> {selectedDate || "2025-04-01"}
       </p>
       <p>
-        <strong>Time:</strong> {selectedTime}
+        <strong>Time:</strong> {selectedTime || "10:00 AM"}
       </p>
-      {isFormVisible && (
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            placeholder="Your Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            autoComplete="name"
-          />
-          <input
-            type="email"
-            name="email"
-            id="email"
-            placeholder="Your Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            autoComplete="email"
-          />
-          <textarea
-            name="message"
-            id="message"
-            placeholder="Lesson type (e.g., grammar, conversation, specific topics)"
-            value={formData.message}
-            onChange={handleChange}
-            required
-            autoComplete="off"
-          ></textarea>
-          <button
-            type="submit"
-            disabled={!formData.name || !formData.email || !formData.message}
-          >
-            Confirm Booking
-          </button>
-        </form>
-      )}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="name"
+          placeholder="Your Name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Your Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        <textarea
+          name="message"
+          placeholder="Lesson type (e.g., grammar, conversation, specific topics)"
+          value={formData.message}
+          onChange={handleChange}
+          required
+        ></textarea>
+        <button
+          type="submit"
+          disabled={!formData.name || !formData.email || !formData.message}
+        >
+          Confirm Booking
+        </button>
+        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
+        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+      </form>
     </FormContainer>
   );
 };

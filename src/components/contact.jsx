@@ -1,16 +1,87 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(
+        "http://localhost:5001/api/email/send-contact-message",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (response.ok) {
+        setSuccessMessage("Your message was sent successfully!");
+        setErrorMessage(""); // Clear any previous error message
+        setFormData({ name: "", email: "", message: "" }); // Clear the form
+      } else {
+        const errorData = await response.json();
+        setErrorMessage(`Failed to send message: ${errorData.message}`);
+        setSuccessMessage(""); // Clear any previous success message
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setErrorMessage("An error occurred while sending your message.");
+      setSuccessMessage(""); // Clear any previous success message
+    }
+  };
+
   return (
     <Container id="contact">
       <h2>Contact me here</h2>
       <p>If you have any questions, feel free to reach out!</p>
-      <form>
-        <input type="text" placeholder="Your Name" required />
-        <input type="email" placeholder="Your Email" required />
-        <textarea placeholder="Your Message" required></textarea>
-        <button type="submit">Send Message</button>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="name"
+          placeholder="Your Name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Your Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        <textarea
+          name="message"
+          placeholder="Your Message"
+          value={formData.message}
+          onChange={handleChange}
+          required
+        ></textarea>
+        <button
+          type="submit"
+          disabled={!formData.name || !formData.email || !formData.message}
+        >
+          Send Message
+        </button>
+        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
+        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
       </form>
     </Container>
   );
@@ -46,10 +117,10 @@ const Container = styled.section`
     gap: 1rem;
     width: 100%;
     max-width: 500px;
-    background-color: #ffffff; /* Add background color here */
-    padding: 1.5rem; /* Add padding for spacing inside the form */
-    border-radius: 10px; /* Optional: Add rounded corners */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow for better styling */
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   input,
   textarea {
@@ -70,7 +141,12 @@ const Container = styled.section`
     cursor: pointer;
   }
 
-  button:hover {
+  button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  button:hover:not(:disabled) {
     background-color: #0056b3;
   }
 `;

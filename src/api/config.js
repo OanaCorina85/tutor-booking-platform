@@ -5,12 +5,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const variables = {
-  // eslint-disable-next-line no-undef
-  firebaseApiKey: process.env.VITE_FIREBASE_API_KEY,
-  // eslint-disable-next-line no-undef
-  databaseUrl: process.env.VITE_DATABASE_URL,
-  // eslint-disable-next-line no-undef
-  authApiUrl: process.env.VITE_AUTH_API_URL,
+  firebaseApiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  databaseUrl: import.meta.env.VITE_DATABASE_URL,
+  authApiUrl: import.meta.env.VITE_AUTH_API_URL,
 };
 
 console.log("Environment Variables:", variables);

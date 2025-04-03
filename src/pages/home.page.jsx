@@ -6,6 +6,8 @@ import CustomCalendar from "../components/calendar"; // Calendar component
 import BookingForm from "../pages/bookingForm"; // BookingForm component
 import TimeSlots from "../components/time-slots"; // TimeSlots component
 import Contact from "../components/contact"; // Contact component
+import { AboutMeContainer, AvatarImg } from "../components/about-me";
+import { CalendarContainer, SuccessMessage  } from "../components/calendar"; // CalendarContainer component
 
 const HomePage = () => {
   const [selectedDate, setSelectedDate] = useState(null); // State to store selected date
@@ -40,8 +42,6 @@ const HomePage = () => {
       <MainContainer>
         <Navbar /> {/* Navbar remains at the top */}
         <HeroSection id="home">
-          {" "}
-          {/* Add id here */}
           <BackgroundImage src="/backgroundImage.jpeg" alt="Background" />
           <TextContainer>
             <h1>Welcome to my Platform</h1>
@@ -60,8 +60,8 @@ const HomePage = () => {
             </VideoContainer>
           )}
         </HeroSection>
-        <AboutSection id="about">
-          <AvatarImage src="/avatar.jpg" alt="Avatar" />
+        <AboutMeContainer id="about">
+          <AvatarImg src="/avatar.jpg" alt="Avatar" />
           <h1>About Me</h1>
           <p>
             By now, you probably had some formal lessons in schools or special
@@ -70,8 +70,9 @@ const HomePage = () => {
             Conversation practice based on nice and funny topics. I cannot wait
             to teach you this beautiful language!
           </p>
-        </AboutSection>
-        <CalendarSection id="bookings">
+        </AboutMeContainer>
+        <CalendarContainer id="bookings">
+          <h2>Book Your Lesson</h2>
           <CustomCalendar onDateSelect={setSelectedDate} />
           {selectedDate && (
             <TimeSlots
@@ -80,13 +81,13 @@ const HomePage = () => {
             />
           )}
           {selectedDate && selectedTime && (
-            <BookingForm
+            <BookingForm id="booking-form"
               selectedDate={selectedDate}
               selectedTime={selectedTime}
               onBook={handleBooking}
             />
           )}
-        </CalendarSection>
+        </CalendarContainer>
         <Contact id="contact" />
         <Footer />
       </MainContainer>
@@ -223,146 +224,6 @@ const CloseButton = styled.button`
   &:hover {
     background-color: rgba(19, 18, 18, 0.29);
   }
-`;
-
-const AboutSection = styled.section`
-  position: relative; /* Ensure the section is the positioning context */
-  width: 100%;
-  height: 100vh; /* Full viewport height */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  background-color: #b5c8e5;
-  text-align: center;
-  color: #333;
-  padding: 2rem;
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Optional shadow for better readability */
-  }
-  p {
-    font-size: 1.2rem;
-    max-width: 500px; /* Limit the width of the paragraph */
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Optional shadow for better readability */
-  }
-  border-radius: 10px; /* Optional rounded corners */
-`;
-
-const AvatarImage = styled.img`
-  position: absolute; /* Position it absolutely within the section */
-  z-index: 2; /* Ensure it's above the background */
-  top: 75px; /* Move it above the AboutSection */
-  left: 50%;
-  transform: translateX(-50%); /* Center it horizontally */
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  border: 5px solid #fff; /* Optional border for better visibility */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Optional shadow for better styling */
-`;
-
-const CalendarSection = styled.section`
-  padding: 2rem;
-  display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  flex-direction: column; /* Stack children vertically */
-  background-color: #b5c8e5;
-  text-align: center;
-  color: #333;
-  height: auto; /* Full viewport height */
-`;
-
-const Button = styled.button`
-  /* margin: 1rem; */
-  padding: 0.5rem 1rem;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  text-align: center;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-const BookingFormContainer = styled.div`
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  justify-content: flex-start;
-  width: 100%;
-  max-width: 700px; /* Optional: Limit the width */
-  min-height: fit-content; /* Allow the height to adjust dynamically */
-  overflow: auto; /* Ensure content is not clipped */
-  padding: 1.5rem;
-  margin: 0 auto;
-
-  h3 {
-    margin-bottom: 1rem;
-    color: #333;
-    background-color: #f0f0f0;
-    padding: 10px;
-  }
-
-  p {
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: #555;
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  input,
-  textarea {
-    width: 100%;
-    padding: 0.8rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-  }
-
-  button {
-    padding: 0.8rem;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-
-  button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
-
-  button:hover:not(:disabled) {
-    background-color: #0056b3;
-  }
-`;
-const SuccessMessage = styled.p`
-  color: green;
-  margin-top: 1rem;
-`;
-
-const ErrorMessage = styled.p`
-  color: red;
-  margin-top: 1rem;
-`;
-
-const FormContainer = styled.div`
-  position: relative;
-  z-index: 1000;
 `;
 
 export default HomePage;

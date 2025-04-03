@@ -125,7 +125,7 @@ const CustomCalendar = ({ onDateSelect }) => {
 
   return (
     <>
-      <Container>
+      <CalendarContainer>
         <Calendar
           onClickDay={handleOnClickDay}
           tileDisabled={isTileDisabled}
@@ -162,26 +162,29 @@ const CustomCalendar = ({ onDateSelect }) => {
           </>
         )}
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
-      </Container>
+      </CalendarContainer>
     </>
   );
 };
 
-const Container = styled.section`
+export const CalendarContainer = styled.section`
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  width: 100vh;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   min-height: 100vh;
   margin: 0 auto;
   gap: 20px;
   padding: 1rem;
   overflow-y: visible;
-
+  background-color:#b5c8e5;
+  
   .react-calendar {
     background-color: rgba(11, 58, 78, 0.9);
-    width: 100%;
+    width: 100vh;
     max-width: 100%;
     height: auto;
     border-radius: 10px;
@@ -197,7 +200,7 @@ const Container = styled.section`
   }
 `;
 
-const TimeSlots = styled.div`
+export const TimeSlots = styled.div`
   margin-top: 20px;
   text-align: center;
 
@@ -233,7 +236,7 @@ const TimeSlots = styled.div`
   }
 `;
 
-const SuccessMessage = styled.p`
+export const SuccessMessage = styled.p`
   color: green;
   font-size: 1.2rem;
   margin-top: 1rem;
