@@ -34,6 +34,9 @@ const Contact = () => {
         setSuccessMessage("Your message was sent successfully!");
         setErrorMessage(""); // Clear any previous error message
         setFormData({ name: "", email: "", message: "" }); // Clear the form
+
+        // Redirect to the home page section
+        window.location.hash = "#home"; // Assuming the home section has an id="home"
       } else {
         const errorData = await response.json();
         setErrorMessage(`Failed to send message: ${errorData.message}`);

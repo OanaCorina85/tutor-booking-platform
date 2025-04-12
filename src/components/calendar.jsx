@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import styled from "styled-components";
-import BookingForm from "../pages/bookingForm"; // Import BookingForm component
+import BookingForm from "../pages/bookingForm";
 
 const CustomCalendar = ({ onDateSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +17,8 @@ const CustomCalendar = ({ onDateSelect }) => {
   const [availability, setAvailability] = useState({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [successMessage, setSuccessMessage] = useState("");
+
+  const calendarRef = useRef(null); // Create a ref for the calendar container
 
   const defaultTimeSlots = useMemo(
     () => ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"],
@@ -35,9 +43,9 @@ const CustomCalendar = ({ onDateSelect }) => {
         ).getDate();
 
         for (let day = 1; day <= daysInMonth; day++) {
-          const date = new Date(currentYear, currentMonth, day)
-            .toISOString()
-            .split("T")[0];
+          const date = new Date(
+            Date.UTC(currentYear, currentMonth, day)
+          ).toLocaleDateString("en-CA"); // Format as YYYY-MM-DD
           newAvailability[date] = [...defaultTimeSlots];
         }
       }
@@ -61,11 +69,17 @@ const CustomCalendar = ({ onDateSelect }) => {
   }, []);
 
   const handleOnClickDay = (date) => {
-    const dateString = date.toISOString().split("T")[0];
+    const dateString = date.toLocaleDateString("en-CA");
     if (availability[dateString]) {
       setSelectedDate(dateString);
       setSelectedTime(null);
       setIsOpen(true);
+
+      // Scroll to the calendar section
+      if (calendarRef.current) {
+        calendarRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+
       onDateSelect(date);
     }
   };
@@ -107,11 +121,14 @@ const CustomCalendar = ({ onDateSelect }) => {
 
   return (
     <>
-      <CalendarContainer>
+      <CalendarContainer ref={calendarRef}>
+        {/* Always display this message */}
+        <p>Select a date and time for your lesson.</p>
+
         <Calendar
           onClickDay={handleOnClickDay}
           tileDisabled={({ date }) =>
-            !availability[date.toISOString().split("T")[0]] ||
+            !availability[date.toLocaleDateString("en-CA")] ||
             date < new Date().setHours(0, 0, 0, 0)
           }
           tileClassName={({ date }) =>
@@ -121,6 +138,7 @@ const CustomCalendar = ({ onDateSelect }) => {
           }
           locale="en-UK"
         />
+
         {isOpen && (
           <>
             <TimeSlots>
@@ -142,9 +160,11 @@ const CustomCalendar = ({ onDateSelect }) => {
               selectedDate={selectedDate}
               selectedTime={selectedTime}
               onBook={handleBookingComplete}
+              setSuccessMessage={setSuccessMessage} // Pass the function here
             />
           </>
         )}
+
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
       </CalendarContainer>
     </>
@@ -162,7 +182,7 @@ export const CalendarContainer = styled.section`
   min-height: 100vh;
   margin: 0 auto;
   gap: 20px;
-  padding: 1rem;
+  padding: 20px;
   overflow-y: visible;
   background-color: #b5c8e5;
 
@@ -225,6 +245,18 @@ export const SuccessMessage = styled.p`
   font-size: 1.2rem;
   margin-top: 1rem;
   text-align: center;
+`;
+
+export const StyledMessage = styled.p`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+  background-color: #f0f8ff; /* Light background for emphasis */
+  padding: 10px 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 `;
 
 export default CustomCalendar;

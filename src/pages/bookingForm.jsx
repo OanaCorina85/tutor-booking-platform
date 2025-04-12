@@ -1,21 +1,31 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 
-const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
+const BookingForm = ({
+  selectedDate,
+  selectedTime,
+  onBook,
+  setSuccessMessage,
+}) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
   });
-  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isBookingComplete, setIsBookingComplete] = useState(false);
+
   const [localSelectedTime, setLocalSelectedTime] = useState(
     selectedTime || ""
-  ); // Default to an empty string
-  const [errorMessage, setErrorMessage] = useState("");
+  );
   const [bookedSlots, setBookedSlots] = useState([]);
   const availableTimes = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM"];
 
   const formRef = useRef(null);
+
+  useEffect(() => {
+    setLocalSelectedTime(selectedTime || "");
+  }, [selectedTime]);
 
   useEffect(() => {
     if (selectedDate && selectedTime && formRef.current) {
@@ -49,11 +59,6 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!localSelectedTime) {
-      setErrorMessage("Please select a time.");
-      return;
-    }
-
     const bookingDetails = {
       name: formData.name,
       email: formData.email,
@@ -78,9 +83,20 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
         setSuccessMessage("Booking request sent successfully!");
         setErrorMessage("");
         onBook(bookingDetails);
+        setIsBookingComplete(true); // Mark the booking as complete
       } else {
-        const errorData = await response.json();
-        setErrorMessage(`Failed to send booking request: ${errorData.message}`);
+        const contentType = response.headers.get("Content-Type");
+        let errorMessage = "Failed to send booking request";
+
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } else {
+          errorMessage = await response.text();
+        }
+
+        console.error("Error response from server:", errorMessage);
+        setErrorMessage(errorMessage);
         setSuccessMessage("");
       }
     } catch (error) {
@@ -89,6 +105,16 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
       setSuccessMessage("");
     }
   };
+
+  if (isBookingComplete) {
+    return (
+      <FormContainer>
+        <h3>Booking request sent successfully!</h3>
+        <p>Do you want to book another lesson?</p>
+        <button onClick={() => setIsBookingComplete(false)}>Yes</button>
+      </FormContainer>
+    );
+  }
 
   if (!selectedDate) {
     return (
@@ -154,7 +180,6 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
         >
           Confirm Booking
         </button>
-        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
         {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
       </form>
     </FormContainer>
