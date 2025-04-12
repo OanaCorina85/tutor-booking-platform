@@ -1,5 +1,5 @@
 import express from "express";
-import bodyParser from "body-parser";
+// Removed unused bodyParser import
 import emailRoutes from "./email.js"; // Import the email route
 import dotenv from "dotenv";
 import cors from "cors";
@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 
 // Middleware to parse JSON request bodies
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Enable CORS
 const corsOptions = {
@@ -19,6 +19,20 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE"],
 };
 app.use(cors(corsOptions));
+
+let bookedSlots = {}; // Example in-memory storage for booked slots
+
+// Route to fetch booked slots for a specific date
+app.get("/api/booked-slots", (req, res) => {
+  const { date } = req.query;
+
+  if (!date) {
+    return res.status(400).json({ message: "Date is required." });
+  }
+
+  const slots = bookedSlots[date] || [];
+  res.status(200).json({ bookedSlots: slots });
+});
 
 // API Routes
 app.use("/api/email", emailRoutes); // Add the email route

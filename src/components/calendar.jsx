@@ -10,21 +10,13 @@ const CustomCalendar = ({ onDateSelect }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [availability, setAvailability] = useState({});
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [successMessage, setSuccessMessage] = useState(""); // State for success message
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Define default time slots
   const defaultTimeSlots = useMemo(
     () => ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"],
     []
   );
 
-  // Define booked slots
-  const bookedSlots = {
-    "2025-03-31": ["10:00 AM", "1:00 PM"],
-    "2025-04-01": ["9:00 AM"],
-  };
-
-  // Generate availability for the next `n` months
   const generateAvailabilityForNextMonths = useCallback(
     (monthsAhead) => {
       const now = new Date();
@@ -55,13 +47,11 @@ const CustomCalendar = ({ onDateSelect }) => {
     [defaultTimeSlots]
   );
 
-  // Initialize availability for the next 3 months
   useEffect(() => {
     const nextMonthsAvailability = generateAvailabilityForNextMonths(3);
     setAvailability(nextMonthsAvailability);
   }, [defaultTimeSlots, generateAvailabilityForNextMonths]);
 
-  // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -70,23 +60,20 @@ const CustomCalendar = ({ onDateSelect }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Handle date click
   const handleOnClickDay = (date) => {
     const dateString = date.toISOString().split("T")[0];
     if (availability[dateString]) {
       setSelectedDate(dateString);
-      setSelectedTime(null); // Reset selected time when a new date is selected
+      setSelectedTime(null);
       setIsOpen(true);
       onDateSelect(date);
     }
   };
 
-  // Handle time slot selection
   const handleTimeSelect = (time) => {
-    setSelectedTime(time); // Update selected time
+    setSelectedTime(time);
   };
 
-  // Check if a time slot is available
   const isTimeSlotAvailable = (date, time) => {
     const now = currentTime;
     const [hour, minute, period] = time.split(/[: ]/);
@@ -95,32 +82,27 @@ const CustomCalendar = ({ onDateSelect }) => {
     slotTime.setMinutes(parseInt(minute));
 
     const isPast = slotTime < now;
-    const isBooked = bookedSlots[date]?.includes(time);
+    const isBooked = !availability[date]?.includes(time); // Check if the time is not in the available slots
     return !isPast && !isBooked;
   };
 
-  // Highlight the current day
-  const tileClassName = ({ date }) => {
-    const today = new Date();
-    const isToday = date.toDateString() === today.toDateString();
-    return isToday ? "highlight-today" : null;
-  };
-
-  // Disable dates (both unavailable and past dates)
-  const isTileDisabled = ({ date }) => {
-    const dateString = date.toISOString().split("T")[0];
-    const today = new Date();
-    return !availability[dateString] || date < today.setHours(0, 0, 0, 0);
-  };
-
-  // Handle booking completion
   const handleBookingComplete = (bookingDetails) => {
     console.log("Booking completed:", bookingDetails);
-    setIsOpen(false); // Close the time slots and form
+
+    setAvailability((prevAvailability) => {
+      const updatedAvailability = { ...prevAvailability };
+      updatedAvailability[selectedDate] = updatedAvailability[
+        selectedDate
+      ].filter((time) => time !== selectedTime);
+      console.log("Updated availability:", updatedAvailability); // Debugging
+      return updatedAvailability;
+    });
+
+    setIsOpen(false);
     setSuccessMessage(
       `Lesson successfully booked for ${selectedDate} at ${selectedTime}!`
-    ); // Set the success message
-    setTimeout(() => setSuccessMessage(""), 5000); // Clear the message after 5 seconds
+    );
+    setTimeout(() => setSuccessMessage(""), 5000);
   };
 
   return (
@@ -128,8 +110,15 @@ const CustomCalendar = ({ onDateSelect }) => {
       <CalendarContainer>
         <Calendar
           onClickDay={handleOnClickDay}
-          tileDisabled={isTileDisabled}
-          tileClassName={tileClassName}
+          tileDisabled={({ date }) =>
+            !availability[date.toISOString().split("T")[0]] ||
+            date < new Date().setHours(0, 0, 0, 0)
+          }
+          tileClassName={({ date }) =>
+            date.toDateString() === new Date().toDateString()
+              ? "highlight-today"
+              : null
+          }
           locale="en-UK"
         />
         {isOpen && (
@@ -140,7 +129,7 @@ const CustomCalendar = ({ onDateSelect }) => {
                 {availability[selectedDate]?.map((time) => (
                   <li key={time}>
                     <button
-                      onClick={() => handleTimeSelect(time)} // Set selected time
+                      onClick={() => handleTimeSelect(time)}
                       disabled={!isTimeSlotAvailable(selectedDate, time)}
                     >
                       {time}
@@ -152,13 +141,8 @@ const CustomCalendar = ({ onDateSelect }) => {
             <BookingForm
               selectedDate={selectedDate}
               selectedTime={selectedTime}
-              onBook={handleBookingComplete} // Pass the function to handle booking completion
+              onBook={handleBookingComplete}
             />
-            {selectedDate && selectedTime && (
-              <p>
-                Selected Date: {selectedDate}, Selected Time: {selectedTime}
-              </p>
-            )}
           </>
         )}
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
@@ -180,8 +164,8 @@ export const CalendarContainer = styled.section`
   gap: 20px;
   padding: 1rem;
   overflow-y: visible;
-  background-color:#b5c8e5;
-  
+  background-color: #b5c8e5;
+
   .react-calendar {
     background-color: rgba(11, 58, 78, 0.9);
     width: 100vh;

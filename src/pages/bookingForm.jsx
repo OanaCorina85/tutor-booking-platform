@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 
 const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
@@ -8,7 +8,38 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
     message: "",
   });
   const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // State for error message
+  const [localSelectedTime, setLocalSelectedTime] = useState(
+    selectedTime || ""
+  ); // Default to an empty string
+  const [errorMessage, setErrorMessage] = useState("");
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const availableTimes = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM"];
+
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedDate && selectedTime && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedDate, selectedTime]);
+
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5001/api/booked-slots?date=${selectedDate}`
+        );
+        const data = await response.json();
+        setBookedSlots(data.bookedSlots);
+      } catch (error) {
+        console.error("Error fetching booked slots:", error);
+      }
+    };
+
+    if (selectedDate) {
+      fetchBookedSlots();
+    }
+  }, [selectedDate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,11 +49,16 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!localSelectedTime) {
+      setErrorMessage("Please select a time.");
+      return;
+    }
+
     const bookingDetails = {
       name: formData.name,
       email: formData.email,
       date: selectedDate || "2025-04-01",
-      time: selectedTime || "10:00 AM",
+      time: localSelectedTime,
       message: formData.message,
     };
 
@@ -40,38 +76,55 @@ const BookingForm = ({ selectedDate, selectedTime, onBook }) => {
 
       if (response.ok) {
         setSuccessMessage("Booking request sent successfully!");
-        setErrorMessage(""); // Clear any previous error message
-        onBook(bookingDetails); // Call the onBook function to handle success
+        setErrorMessage("");
+        onBook(bookingDetails);
       } else {
         const errorData = await response.json();
         setErrorMessage(`Failed to send booking request: ${errorData.message}`);
-        setSuccessMessage(""); // Clear any previous success message
+        setSuccessMessage("");
       }
     } catch (error) {
       console.error("Error sending booking request:", error);
       setErrorMessage("An error occurred while sending the booking request.");
-      setSuccessMessage(""); // Clear any previous success message
+      setSuccessMessage("");
     }
   };
 
-  if (!selectedDate || !selectedTime) {
+  if (!selectedDate) {
     return (
       <FormContainer>
-        <h3>Please select a date and time to book your lesson.</h3>
+        <h3>Please select a date to book your lesson.</h3>
       </FormContainer>
     );
   }
 
   return (
-    <FormContainer>
+    <FormContainer ref={formRef}>
       <h3>Confirm Your Appointment</h3>
       <p>
         <strong>Date:</strong> {selectedDate || "2025-04-01"}
       </p>
       <p>
-        <strong>Time:</strong> {selectedTime || "10:00 AM"}
+        <strong>Time:</strong> {localSelectedTime || "Not selected"}
       </p>
       <form onSubmit={handleSubmit}>
+        <select
+          value={localSelectedTime}
+          onChange={(e) => setLocalSelectedTime(e.target.value)}
+        >
+          <option value="" disabled>
+            Select a time
+          </option>
+          {availableTimes.map((time) => (
+            <option
+              key={time}
+              value={time}
+              disabled={bookedSlots.includes(time)}
+            >
+              {time}
+            </option>
+          ))}
+        </select>
         <input
           type="text"
           name="name"
@@ -152,7 +205,8 @@ const FormContainer = styled.div`
   }
 
   input,
-  textarea {
+  textarea,
+  select {
     width: 100%;
     padding: 0.8rem;
     border: 1px solid #ccc;
