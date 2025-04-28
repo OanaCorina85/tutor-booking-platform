@@ -20,6 +20,41 @@ const CustomCalendar = ({ onDateSelect }) => {
 
   const calendarRef = useRef(null); // Create a ref for the calendar container
 
+  const seasonalBackgrounds = useMemo(
+    () => ({
+      winter: "/images/winter.jpg", // December, January, February
+      spring: "/images/spring.jpg", // March, April, May
+      summer: "/images/summer.jpg", // June, July, August
+      autumn: "/images/autumn.jpg", // September, October, November
+    }),
+    []
+  );
+
+  const monthlyBackgrounds = useMemo(
+    () => ({
+      0: "/images/january.jpg", // January
+      1: "/images/february.jpg", // February
+      2: "/images/march.jpg", // March
+      3: "/images/april.jpg", // April
+      4: "/images/may.jpg", // May
+      5: "/images/june.jpg", // June
+      6: "/images/july.jpg", // July
+      7: "/images/august.jpg", // August
+      8: "/images/september.jpg", // September
+      9: "/images/october.jpg", // October
+      10: "/images/november.jpg", // November
+      11: "/images/december.jpg", // December
+    }),
+    []
+  );
+
+  const getSeason = (month) => {
+    if (month === 11 || month === 0 || month === 1) return "winter"; // Dec, Jan, Feb
+    if (month >= 2 && month <= 4) return "spring"; // Mar, Apr, May
+    if (month >= 5 && month <= 7) return "summer"; // Jun, Jul, Aug
+    if (month >= 8 && month <= 10) return "autumn"; // Sep, Oct, Nov
+  };
+
   const defaultTimeSlots = useMemo(
     () => ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"],
     []
