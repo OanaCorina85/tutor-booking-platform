@@ -4,31 +4,24 @@ import React, {
   useMemo,
   useCallback,
   useRef,
+  memo,
 } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+// import "react-calendar/dist/Calendar.css";
 import styled from "styled-components";
 import BookingForm from "../pages/bookingForm";
 
-const CustomCalendar = ({ onDateSelect }) => {
+const CustomCalendar = memo(({ onDateSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [availability, setAvailability] = useState({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [successMessage, setSuccessMessage] = useState("");
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [isBookingComplete, setIsBookingComplete] = useState(false);
 
   const calendarRef = useRef(null); // Create a ref for the calendar container
-
-  const seasonalBackgrounds = useMemo(
-    () => ({
-      winter: "/images/winter.jpg", // December, January, February
-      spring: "/images/spring.jpg", // March, April, May
-      summer: "/images/summer.jpg", // June, July, August
-      autumn: "/images/autumn.jpg", // September, October, November
-    }),
-    []
-  );
 
   const monthlyBackgrounds = useMemo(
     () => ({
@@ -47,13 +40,6 @@ const CustomCalendar = ({ onDateSelect }) => {
     }),
     []
   );
-
-  const getSeason = (month) => {
-    if (month === 11 || month === 0 || month === 1) return "winter"; // Dec, Jan, Feb
-    if (month >= 2 && month <= 4) return "spring"; // Mar, Apr, May
-    if (month >= 5 && month <= 7) return "summer"; // Jun, Jul, Aug
-    if (month >= 8 && month <= 10) return "autumn"; // Sep, Oct, Nov
-  };
 
   const defaultTimeSlots = useMemo(
     () => ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "3:00 PM"],
@@ -103,6 +89,29 @@ const CustomCalendar = ({ onDateSelect }) => {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const currentMonth = new Date().getMonth();
+    const backgroundImage = monthlyBackgrounds[currentMonth];
+    if (calendarRef.current) {
+      calendarRef.current.style.backgroundImage = `url(${backgroundImage})`;
+      calendarRef.current.style.backgroundSize = "cover";
+      calendarRef.current.style.backgroundPosition = "center";
+    }
+  }, [currentMonth, monthlyBackgrounds]);
+
+  useEffect(() => {
+    const backgroundImage = monthlyBackgrounds[currentMonth];
+    if (calendarRef.current) {
+      calendarRef.current.style.backgroundImage = `url(${backgroundImage})`;
+      calendarRef.current.style.backgroundSize = "cover";
+      calendarRef.current.style.backgroundPosition = "center";
+    }
+  }, [currentMonth, monthlyBackgrounds]);
+
+  useEffect(() => {
+    console.log("Current month updated:", currentMonth); // Debugging
+  }, [currentMonth]);
+
   const handleOnClickDay = (date) => {
     const dateString = date.toLocaleDateString("en-CA");
     if (availability[dateString]) {
@@ -142,156 +151,390 @@ const CustomCalendar = ({ onDateSelect }) => {
       const updatedAvailability = { ...prevAvailability };
       updatedAvailability[selectedDate] = updatedAvailability[
         selectedDate
-      ].filter((time) => time !== selectedTime);
-      console.log("Updated availability:", updatedAvailability); // Debugging
+      ].filter((time) => time !== selectedTime); // Remove the booked slot
+
       return updatedAvailability;
     });
 
     setIsOpen(false);
+    setIsBookingComplete(true); // Mark the booking as complete
     setSuccessMessage(
       `Lesson successfully booked for ${selectedDate} at ${selectedTime}!`
     );
     setTimeout(() => setSuccessMessage(""), 5000);
   };
 
+  const getTextColorBasedOnBackground = (backgroundColor) => {
+    const rgb = backgroundColor.match(/\d+/g);
+    if (!rgb || rgb.length !== 3) return "#000000";
+
+    const brightness =
+      (parseInt(rgb[0]) * 299 +
+        parseInt(rgb[1]) * 587 +
+        parseInt(rgb[2]) * 114) /
+      1000;
+
+    return brightness > 128 ? "#000000" : "#ffffff";
+  };
+
+  // Apply the color dynamically
+  const backgroundColor = "rgb(214, 98, 98)"; // Replace with your dynamic background color
+  const textColor = getTextColorBasedOnBackground(backgroundColor);
+
   return (
     <>
       <CalendarContainer ref={calendarRef}>
-        {/* Always display this message */}
-        <p>Select a date and time for your lesson.</p>
+        <CalendarHeading $textcolor={textColor}>
+          Select a date and time for your lesson.
+        </CalendarHeading>
 
-        <Calendar
+        <StyledCalendar
+          className="custom-calendar"
           onClickDay={handleOnClickDay}
-          tileDisabled={({ date }) =>
-            !availability[date.toLocaleDateString("en-CA")] ||
-            date < new Date().setHours(0, 0, 0, 0)
-          }
-          tileClassName={({ date }) =>
-            date.toDateString() === new Date().toDateString()
-              ? "highlight-today"
-              : null
-          }
+          onActiveStartDateChange={({ activeStartDate }) => {
+            const newMonth = activeStartDate.getMonth(); // Get the new month (0-11)
+            setCurrentMonth(newMonth); // Update the currentMonth state
+          }}
+          tileDisabled={({ date }) => {
+            const today = new Date().setHours(0, 0, 0, 0);
+            const tileDate = new Date(date).setHours(0, 0, 0, 0);
+            return tileDate < today; // Disable past dates
+          }}
           locale="en-UK"
         />
 
-        {isOpen && (
+        {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+
+        {isBookingComplete ? (
+          <div>
+            <StyledPrompt>Would you like to book another lesson?</StyledPrompt>
+            <div
+              style={{ display: "flex", justifyContent: "center", gap: "10px" }}
+            >
+              <YesButton
+                onClick={() => {
+                  setIsBookingComplete(false); // Reset the booking process
+                  setSelectedDate(null); // Clear the selected date
+                  setSelectedTime(null); // Clear the selected time
+                  setCurrentMonth(new Date().getMonth()); // Reset the current month
+                  setAvailability(generateAvailabilityForNextMonths(3)); // Regenerate availability
+
+                  if (calendarRef.current) {
+                    calendarRef.current.scrollIntoView({ behavior: "smooth" }); // Scroll back to the calendar
+                  }
+                }}
+              >
+                Yes
+              </YesButton>
+              <NoButton
+                onClick={() => {
+                  setIsBookingComplete(false); // Reset the booking process
+                  if (calendarRef.current) {
+                    calendarRef.current.scrollIntoView({ behavior: "smooth" });
+                  }
+                  window.location.hash = "#home"; // Redirect to the home section
+                }}
+              >
+                No
+              </NoButton>
+            </div>
+          </div>
+        ) : (
           <>
-            <TimeSlots>
-              <h3>Available Time Slots for {selectedDate}</h3>
-              <ul>
-                {availability[selectedDate]?.map((time) => (
-                  <li key={time}>
-                    <button
-                      onClick={() => handleTimeSelect(time)}
-                      disabled={!isTimeSlotAvailable(selectedDate, time)}
-                    >
-                      {time}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </TimeSlots>
-            <BookingForm
-              selectedDate={selectedDate}
-              selectedTime={selectedTime}
-              onBook={handleBookingComplete}
-              setSuccessMessage={setSuccessMessage} // Pass the function here
-            />
+            {isOpen && (
+              <>
+                <TimeSlots>
+                  <StyledParagraph $textcolor={textColor}>
+                    Available Time Slots for {selectedDate}
+                  </StyledParagraph>
+                  <ul>
+                    {availability[selectedDate]?.map((time) => (
+                      <li key={time}>
+                        <button
+                          onClick={() => handleTimeSelect(time)}
+                          disabled={!isTimeSlotAvailable(selectedDate, time)}
+                        >
+                          {time}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </TimeSlots>
+                <BookingForm
+                  selectedDate={selectedDate}
+                  selectedTime={selectedTime}
+                  onBook={handleBookingComplete}
+                  setSuccessMessage={setSuccessMessage}
+                />
+              </>
+            )}
           </>
         )}
-
-        {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
       </CalendarContainer>
     </>
   );
-};
+});
+
+const StyledCalendar = styled(Calendar)`
+  &.react-calendar {
+    width: 100%;
+    max-width: 600px;
+    background-color: #a8c4df;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 0 auto;
+    font-size: 1.2rem;
+    color: #2062ad;
+    text-align: center;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(136, 135, 135, 0.7); /* Optional shadow for better readability */
+    font-family: Arial, sans-serif;
+  }
+
+  .react-calendar__navigation {
+    display: flex;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: #5489d8;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+  }
+  .react-calendar__navigation button {
+    background-color: #5489d8;
+    color: #2e2b2b;
+    font-weight: bold;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 10px;
+    transition: background-color 0.3s ease;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  .react-calendar__navigation button:hover {
+    background-color: #143fc1;
+    text-size-adjust: 1.5rem;
+    color: #2b2929;
+    transform: scale(1.05);
+  }
+
+  .react-calendar__tile {
+    background-color: #a8c4df;
+    color: #292727;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .react-calendar__tile-- {
+    background-color: #d8d654;
+    color: #2b2929;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .react-calendar__tile--disabled {
+    color: #8d8b8b;
+    opacity: 0.5;
+    text-decoration: line-through;
+    border: 1px dashed #ccc;
+    cursor: not-allowed;
+  }
+  .react-calendar__tile--disabled:hover {
+    background-color: #a9afb4;
+    color: #d88181;
+    cursor: not-allowed;
+  }
+
+  .react-calendar__tile:hover:not(:disabled) {
+    background-color: #4188cf;
+    color: #ebecf1;
+  }
+
+  .react-calendar__tile--active {
+    background-color: #5489d8;
+    color: #f1e5e5;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .react-calendar__tile--now {
+    background-color: #ffcc00; /* Bright yellow background */
+    color: #333; /* Dark text color for contrast */
+    font-weight: bold; /* Make the text bold */
+    border: 2px solid #ff9900; /* Add a border for emphasis */
+    transform: scale(1.1); /* Slightly enlarge the tile */
+    transition: transform 0.2s ease, background-color 0.3s ease;
+  }
+
+  .react-calendar__tile--now:hover {
+    background-color: #ff9900; /* Darker yellow on hover */
+    color: #fff; /* White text on hover */
+    transform: scale(1.15); /* Slightly enlarge on hover */
+  }
+`;
 
 export const CalendarContainer = styled.section`
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   flex-direction: column;
   width: 100%;
   max-width: 100%;
-  height: auto;
+  height: 100vh;
   min-height: 100vh;
   margin: 0 auto;
   gap: 20px;
-  padding: 20px;
-  overflow-y: visible;
-  background-color: #b5c8e5;
-
-  .react-calendar {
-    background-color: rgba(11, 58, 78, 0.9);
-    width: 100vh;
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    margin: 20px 0;
-    color: white;
-  }
-  .highlight-today {
-    background-color: #ffcc00 !important; /* Highlight color for today */
-    color: #000 !important; /* Text color for today */
-    font-weight: bold;
-  }
+  overflow-y: auto;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* Fixed background for parallax effect */
+  color: #007bff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1; /* Ensure it appears above the background */
 `;
 
 export const TimeSlots = styled.div`
   margin-top: 20px;
   text-align: center;
-
-  h3 {
-    margin-bottom: 10px;
-    color: #333;
-  }
+  padding: 10px 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
 
   ul {
     list-style: none;
     padding: 0;
     display: flex;
+    flex-wrap: wrap; /* Allow wrapping of items */
     justify-content: center;
     gap: 10px;
+    font-size: 1.2rem;
   }
 
   button {
-    background-color: #007bff;
-    color: white;
+    flex: 1 1 calc(33.33% - 10px); /* Default: 3 buttons per row */
+    max-width: 150px;
+    min-width: 80px;
+    font-size: clamp(0.8rem, 2.5vw, 1.2rem); /* Responsive font size */
+    background-color: rgba(0, 123, 255, 0.8);
+    color: #fff;
     border: none;
     border-radius: 5px;
     padding: 10px 15px;
     cursor: pointer;
-  }
+    transition: background-color 0.3s ease, transform 0.2s ease;
 
-  button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
+    &:disabled {
+      background-color: rgba(204, 204, 204, 0.8);
+      cursor: not-allowed;
+    }
 
-  button:hover:not(:disabled) {
-    background-color: #0056b3;
+    &:hover:not(:disabled) {
+      background-color: rgba(0, 86, 179, 0.9);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      flex: 1 1 calc(50% - 10px); /* 2 buttons per row for tablets */
+    }
+
+    @media (max-width: 480px) {
+      flex: 1 1 calc(100% - 10px); /* 1 button per row for small screens */
+    }
   }
 `;
 
 export const SuccessMessage = styled.p`
-  color: green;
+  color: #0b1cb8;
   font-size: 1.2rem;
   margin-top: 1rem;
   text-align: center;
+  font-weight: bold;
+  background-color: rgba(203, 236, 232, 0.8);
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s ease-in-out;
+  opacity: 1;
 `;
 
-export const StyledMessage = styled.p`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
-  margin-bottom: 20px;
-  background-color: #f0f8ff; /* Light background for emphasis */
+const BaseText = styled.p`
+  color: ${(props) => props.$textcolor || "#913030"};
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  background-color: rgba(203, 236, 232, 0.8);
   padding: 10px 15px;
+  border-radius: 8px;
+  display: inline-block;
+  margin: 10px 0;
+  font-size: ${(props) => props.$fontsize || "1.2rem"};
+  font-weight: bold;
+`;
+
+export const StyledParagraph = BaseText;
+export const CalendarHeading = styled(BaseText).attrs({ as: "h3" })``;
+
+const StyledPrompt = styled(BaseText).attrs({ as: "p" })``;
+
+const YesButton = styled.button`
+  padding: 0.8rem 1.5rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
   border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #218838;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+`;
+
+const NoButton = styled.button`
+  padding: 0.8rem 1.5rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #c82333;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
 `;
 
 export default CustomCalendar;

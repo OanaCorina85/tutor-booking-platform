@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import styled from "styled-components";
+import "react-calendar/dist/Calendar.css"; // Import default styles
 
 const BookingForm = ({
   selectedDate,
@@ -22,6 +24,7 @@ const BookingForm = ({
   const availableTimes = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM"];
 
   const formRef = useRef(null);
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     setLocalSelectedTime(selectedTime || "");
@@ -39,10 +42,18 @@ const BookingForm = ({
         const response = await fetch(
           `http://localhost:5001/api/booked-slots?date=${selectedDate}`
         );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} - ${response.statusText}`);
+        }
+
         const data = await response.json();
         setBookedSlots(data.bookedSlots);
       } catch (error) {
         console.error("Error fetching booked slots:", error);
+        setErrorMessage(
+          "Failed to fetch booked slots. Please try again later."
+        );
       }
     };
 
@@ -59,6 +70,16 @@ const BookingForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (
+      !formData.name ||
+      !formData.email ||
+      !selectedDate ||
+      !localSelectedTime
+    ) {
+      setErrorMessage("Please fill in all required fields.");
+      return;
+    }
+
     const bookingDetails = {
       name: formData.name,
       email: formData.email,
@@ -66,6 +87,8 @@ const BookingForm = ({
       time: localSelectedTime,
       message: formData.message,
     };
+
+    console.log("Booking details being sent:", bookingDetails);
 
     try {
       const response = await fetch(
@@ -79,12 +102,7 @@ const BookingForm = ({
         }
       );
 
-      if (response.ok) {
-        setSuccessMessage("Booking request sent successfully!");
-        setErrorMessage("");
-        onBook(bookingDetails);
-        setIsBookingComplete(true); // Mark the booking as complete
-      } else {
+      if (!response.ok) {
         const contentType = response.headers.get("Content-Type");
         let errorMessage = "Failed to send booking request";
 
@@ -97,21 +115,45 @@ const BookingForm = ({
 
         console.error("Error response from server:", errorMessage);
         setErrorMessage(errorMessage);
-        setSuccessMessage("");
+        return;
       }
+
+      setSuccessMessage("Booking request sent successfully!");
+      setErrorMessage("");
+      onBook(bookingDetails);
+      setIsBookingComplete(true); // Mark the booking as complete
     } catch (error) {
       console.error("Error sending booking request:", error);
-      setErrorMessage("An error occurred while sending the booking request.");
-      setSuccessMessage("");
+      setErrorMessage(
+        "Failed to send booking request. Please try again later."
+      );
     }
   };
 
   if (isBookingComplete) {
+    console.log("Rendering booking complete message...");
     return (
       <FormContainer>
         <h3>Booking request sent successfully!</h3>
         <p>Do you want to book another lesson?</p>
-        <button onClick={() => setIsBookingComplete(false)}>Yes</button>
+        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+          <YesButton
+            onClick={() => {
+              console.log("Resetting booking state...");
+              setIsBookingComplete(false); // Reset the state
+            }}
+          >
+            Yes
+          </YesButton>
+          <NoButton
+            onClick={() => {
+              console.log("Redirecting to home...");
+              navigate("/"); // Redirect to the home page
+            }}
+          >
+            No
+          </NoButton>
+        </div>
       </FormContainer>
     );
   }
@@ -186,30 +228,88 @@ const BookingForm = ({
   );
 };
 
+const YesButton = styled.button`
+  padding: 0.8rem 1.5rem;
+  background-color: #28a745; /* Green for Yes */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #218838; /* Darker green on hover */
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+`;
+
+const NoButton = styled.button`
+  padding: 0.8rem 1.5rem;
+  background-color: #dc3545; /* Red for No */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #c82333; /* Darker red on hover */
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+`;
+
 const FormContainer = styled.div`
-  background-color: #ffffff;
+  background-color: transparent;
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
   text-align: center;
   justify-content: flex-start;
   width: 100%;
   max-width: 700px;
   height: auto;
   overflow: visible;
-  padding: 1.5rem;
+  padding: 1rem;
   margin: 0 auto;
+  flex-direction: column;
+  z-index: 1;
 
   h3 {
     margin-bottom: 1rem;
-    color: #333;
-    background-color: #f0f0f0;
+    color: black;
+    background-color: rgba(203, 236, 232, 0.8);
     padding: 5px;
+    font-size: 1.5rem;
+    text-align: center;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Optional shadow for better readability */
+    border-radius: 5px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    border-radius: 5px;
   }
 
   p {
     margin-bottom: 1rem;
     font-size: 1rem;
-    color: #555;
+    color: black;
+    background-color: transparent;
+    padding: 5px;
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+    border-radius: 5px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Optional shadow for better readability */
+    font-size: 1.2rem;
   }
 
   form {
@@ -223,7 +323,7 @@ const FormContainer = styled.div`
     overflow-y: visible; /* Ensure content is not clipped */
     margin: 0 auto;
     padding: 1rem;
-    background-color: #f9f9f9;
+    background-color: rgba(203, 236, 232, 0.8);
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 1px solid #ccc;

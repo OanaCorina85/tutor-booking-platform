@@ -4,10 +4,12 @@ import Navbar from "../components/navBar";
 import Footer from "../components/footer";
 import CustomCalendar from "../components/calendar"; // Calendar component
 import BookingForm from "../pages/bookingForm"; // BookingForm component
-import TimeSlots from "../components/time-slots"; // TimeSlots component
 import Contact from "../components/contact"; // Contact component
-import { AboutMeContainer, AvatarImg } from "../components/about-me";
-import { CalendarContainer, SuccessMessage,} from "../components/calendar"; // CalendarContainer component
+import { AboutMeContainer, AvatarImg } from "../components/aboutMe";
+import {
+  CalendarContainer,
+  SuccessMessage
+} from "../components/calendar"; // CalendarContainer component
 
 const HomePage = () => {
   const [selectedDate, setSelectedDate] = useState(null); // State to store selected date
@@ -36,10 +38,6 @@ const HomePage = () => {
     setAppointments(updatedAppointments);
     localStorage.setItem("appointments", JSON.stringify(updatedAppointments));
   };
-
-
-  console.log("setSuccessMessage is being passed:", typeof setSuccessMessage);
-  console.log("setSuccessMessage in HomePage:", typeof setSuccessMessage);
 
   return (
     <>
@@ -77,14 +75,11 @@ const HomePage = () => {
           </p>
         </AboutMeContainer>
         <CalendarContainer id="bookings">
-          
-          <CustomCalendar onDateSelect={setSelectedDate} />
-          {selectedDate && (
-            <TimeSlots
-              selectedDate={selectedDate}
-              onTimeSelect={setSelectedTime}
-            />
-          )}
+          <CustomCalendar onDateSelect={(date) =>{
+            setSelectedDate(date);
+            setSelectedTime(null);
+          }}
+          />
           {selectedDate && selectedTime && (
             <BookingForm
               selectedDate={selectedDate}
@@ -234,5 +229,3 @@ const CloseButton = styled.button`
 `;
 
 export default HomePage;
-
-console.log("setSuccessMessage in BookingForm:", typeof setSuccessMessage);

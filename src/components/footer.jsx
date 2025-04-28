@@ -15,7 +15,7 @@ const Container = styled.footer`
   flex-direction: column; /* Stack items vertically */
   align-items: center; /* Center items horizontally */
   justify-content: center; /* Center items vertically */
-  background-color: #f5f5f5;
+  background-color: #b5c8e5;
   padding: 20px;
   text-align: center;
   font-size: 1.2rem;

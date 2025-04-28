@@ -110,7 +110,7 @@ const Container = styled.nav`
 
   button {
     background-color: #5489d8;
-    color: white;
+    color: black;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -120,14 +120,13 @@ const Container = styled.nav`
 
   button.active {
     background-color: #143fc1;
-    color: #fff;
+    color: blanchedalmond;
     font-weight: bold;
     border: 2px solid #fff;
   }
 
   button:hover {
     background-color: #143fc1;
-    color: #171010;
   }
 `;
 

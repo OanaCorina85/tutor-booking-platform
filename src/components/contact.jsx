@@ -35,8 +35,11 @@ const Contact = () => {
         setErrorMessage(""); // Clear any previous error message
         setFormData({ name: "", email: "", message: "" }); // Clear the form
 
-        // Redirect to the home page section
-        window.location.hash = "#home"; // Assuming the home section has an id="home"
+        // Delay clearing the message and redirecting to the homepage
+        setTimeout(() => {
+          setSuccessMessage(""); // Clear the success message
+          window.location.hash = "#home"; // Redirect to the home section
+        }, 5000);
       } else {
         const errorData = await response.json();
         setErrorMessage(`Failed to send message: ${errorData.message}`);
@@ -98,7 +101,7 @@ const Container = styled.section`
   margin: 0;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 10px;
   background-color: #b5c8e5;
   text-align: center;
 
@@ -120,37 +123,48 @@ const Container = styled.section`
     gap: 1rem;
     width: 100%;
     max-width: 500px;
-    background-color: #ffffff;
+    background-color: #a8c4df;
     padding: 1.5rem;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 1px 1px 4px 6px #706d6d;
+    color: black;
+    font-size: 1rem;
   }
   input,
   textarea {
+    color: #201f1f;
+    background-color: #c1d1df;
     width: 100%;
     padding: 0.9rem;
     border: 1px solid white;
     border-radius: 5px;
+    box-shadow: 1px 1px 2px 4px #706d6d;
     font-size: 1rem;
+    transition: border-color 0.3s ease-in-out;
   }
 
   button {
     padding: 0.8rem;
-    background-color: #5489d8;
+    background-color: #3e79d3;
     color: white;
-    border: none;
+    border: 1px solid white;
+    box-shadow: 1px 1px 2px 4px #706d6d;
     border-radius: 5px;
     font-size: 1rem;
     cursor: pointer;
   }
 
   button:disabled {
-    background-color: #ccc;
+    background-color: #cac8c8;
+    color: #999;
+    font-size: 1rem;
+    border: 1px solid #999;
     cursor: not-allowed;
   }
 
   button:hover:not(:disabled) {
     background-color: #0056b3;
+    color: dark;
   }
 `;
 

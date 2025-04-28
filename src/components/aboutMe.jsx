@@ -39,8 +39,6 @@ export const AboutMeContainer = styled.div`
     max-width: 500px;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
   }
-
-  border-radius: 10px;
 `;
 
 export const AvatarImg = styled.img`
