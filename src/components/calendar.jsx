@@ -4,14 +4,12 @@ import React, {
   useMemo,
   useCallback,
   useRef,
-  memo,
 } from "react";
 import Calendar from "react-calendar";
-// import "react-calendar/dist/Calendar.css";
 import styled from "styled-components";
-import BookingForm from "../pages/bookingForm";
+import BookingForm from "./bookingForm";
 
-const CustomCalendar = memo(({ onDateSelect }) => {
+const CustomCalendar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -21,7 +19,9 @@ const CustomCalendar = memo(({ onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [isBookingComplete, setIsBookingComplete] = useState(false);
 
-  const calendarRef = useRef(null); // Create a ref for the calendar container
+  const calendarRef = useRef(null); // Ref for the calendar container
+  const timeSlotsRef = useRef(null); // Ref for the time slots section
+  const formRef = useRef(null); // Ref for the booking form
 
   const monthlyBackgrounds = useMemo(
     () => ({
@@ -55,8 +55,8 @@ const CustomCalendar = memo(({ onDateSelect }) => {
       const newAvailability = {};
 
       for (let i = 0; i < monthsAhead; i++) {
-        const currentMonth = (month + i) % 12;
-        const currentYear = year + Math.floor((month + i) / 12);
+        const currentMonth = (month + i) % 12; // Wrap around to January after December
+        const currentYear = year + Math.floor((month + i) / 12); // Increment year if needed
         const daysInMonth = new Date(
           currentYear,
           currentMonth + 1,
@@ -67,7 +67,7 @@ const CustomCalendar = memo(({ onDateSelect }) => {
           const date = new Date(
             Date.UTC(currentYear, currentMonth, day)
           ).toLocaleDateString("en-CA"); // Format as YYYY-MM-DD
-          newAvailability[date] = [...defaultTimeSlots];
+          newAvailability[date] = [...defaultTimeSlots]; // Assign default time slots
         }
       }
 
@@ -77,9 +77,9 @@ const CustomCalendar = memo(({ onDateSelect }) => {
   );
 
   useEffect(() => {
-    const nextMonthsAvailability = generateAvailabilityForNextMonths(3);
+    const nextMonthsAvailability = generateAvailabilityForNextMonths(10); // Generate for 10 months
     setAvailability(nextMonthsAvailability);
-  }, [defaultTimeSlots, generateAvailabilityForNextMonths]);
+  }, [generateAvailabilityForNextMonths]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -108,9 +108,15 @@ const CustomCalendar = memo(({ onDateSelect }) => {
     }
   }, [currentMonth, monthlyBackgrounds]);
 
+  useEffect(() => {}, [currentMonth]);
+
   useEffect(() => {
-    console.log("Current month updated:", currentMonth); // Debugging
-  }, [currentMonth]);
+    // console.log("Availability updated:", availability);
+  }, [availability]);
+
+  useEffect(() => {
+    // console.log("isOpen state:", isOpen);
+  }, [isOpen]);
 
   const handleOnClickDay = (date) => {
     const dateString = date.toLocaleDateString("en-CA");
@@ -119,17 +125,35 @@ const CustomCalendar = memo(({ onDateSelect }) => {
       setSelectedTime(null);
       setIsOpen(true);
 
-      // Scroll to the calendar section
-      if (calendarRef.current) {
-        calendarRef.current.scrollIntoView({ behavior: "smooth" });
+      // Scroll to the time slots section
+      if (timeSlotsRef.current) {
+        timeSlotsRef.current.scrollIntoView({ behavior: "smooth" });
       }
-
-      onDateSelect(date);
     }
   };
 
   const handleTimeSelect = (time) => {
-    setSelectedTime(time);
+    if (!isTimeSlotAvailable(selectedDate, time)) {
+      setSuccessMessage(
+        "The selected time slot is not available. Please pick another date."
+      );
+      setSelectedTime(null); // Clear the selected time
+      setIsOpen(false); // Close the time slots view
+
+      // Scroll back to the calendar
+      if (calendarRef.current) {
+        calendarRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+      return;
+    }
+
+    // console.log("Time selected:", time); // Debug log
+    setSelectedTime(time); // Set the selected time if available
+
+    // Scroll to the booking form
+    if (formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const isTimeSlotAvailable = (date, time) => {
@@ -149,18 +173,35 @@ const CustomCalendar = memo(({ onDateSelect }) => {
 
     setAvailability((prevAvailability) => {
       const updatedAvailability = { ...prevAvailability };
-      updatedAvailability[selectedDate] = updatedAvailability[
-        selectedDate
-      ].filter((time) => time !== selectedTime); // Remove the booked slot
 
+      // Remove the booked time slot from the selected date
+      if (updatedAvailability[bookingDetails.date]) {
+        updatedAvailability[bookingDetails.date] = updatedAvailability[
+          bookingDetails.date
+        ].filter((time) => time !== bookingDetails.time);
+      }
+
+      // Optionally, you can also remove the date if no time slots are left
+      if (updatedAvailability[bookingDetails.date]?.length === 0) {
+        delete updatedAvailability[bookingDetails.date];
+      }
+      // Update the state with the new availability
+      setAvailability(updatedAvailability);
       return updatedAvailability;
     });
 
     setIsOpen(false);
     setIsBookingComplete(true); // Mark the booking as complete
     setSuccessMessage(
-      `Lesson successfully booked for ${selectedDate} at ${selectedTime}!`
+      `Lesson successfully booked for ${bookingDetails.date} at ${bookingDetails.time}!`
     );
+
+    // Scroll to the top of the calendar container
+    if (calendarRef.current) {
+      calendarRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Clear the success message after 5 seconds
     setTimeout(() => setSuccessMessage(""), 5000);
   };
 
@@ -177,12 +218,19 @@ const CustomCalendar = memo(({ onDateSelect }) => {
     return brightness > 128 ? "#000000" : "#ffffff";
   };
 
+  // const handleBookLesson = () => {
+  //   if (formRef.current) {
+  //     formRef.current.scrollIntoView({ behavior: "smooth" }); // Scroll to the booking form
+  //   }
+  // };
+
   // Apply the color dynamically
   const backgroundColor = "rgb(214, 98, 98)"; // Replace with your dynamic background color
   const textColor = getTextColorBasedOnBackground(backgroundColor);
 
   return (
     <>
+      {/* <button onClick={handleBookLesson}>Book a Lesson</button> */}
       <CalendarContainer ref={calendarRef}>
         <CalendarHeading $textcolor={textColor}>
           Select a date and time for your lesson.
@@ -198,11 +246,25 @@ const CustomCalendar = memo(({ onDateSelect }) => {
           tileDisabled={({ date }) => {
             const today = new Date().setHours(0, 0, 0, 0);
             const tileDate = new Date(date).setHours(0, 0, 0, 0);
-            return tileDate < today; // Disable past dates
+            const dateString = date.toLocaleDateString("en-CA");
+
+            // Disable past dates or dates with no available slots
+            return tileDate < today || !availability[dateString]?.length;
           }}
           locale="en-UK"
         />
 
+        {/* {selectedDate && selectedTime && (
+          <BookingForm
+            selectedDate={selectedDate}
+            selectedTime={selectedTime}
+            setSelectedTime={setSelectedTime}
+            onBook={handleBookingComplete}
+            setSuccessMessage={setSuccessMessage}
+            availability={availability[selectedDate]}
+            formRef={formRef} // Pass the formRef to BookingForm
+          />
+        )} */}
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
         {isBookingComplete ? (
@@ -217,7 +279,11 @@ const CustomCalendar = memo(({ onDateSelect }) => {
                   setSelectedDate(null); // Clear the selected date
                   setSelectedTime(null); // Clear the selected time
                   setCurrentMonth(new Date().getMonth()); // Reset the current month
-                  setAvailability(generateAvailabilityForNextMonths(3)); // Regenerate availability
+
+                  // Regenerate availability and update the state
+                  const newAvailability = generateAvailabilityForNextMonths(10);
+                  console.log("New availability generated:", newAvailability); // Debug log
+                  setAvailability(newAvailability);
 
                   if (calendarRef.current) {
                     calendarRef.current.scrollIntoView({ behavior: "smooth" }); // Scroll back to the calendar
@@ -243,7 +309,7 @@ const CustomCalendar = memo(({ onDateSelect }) => {
           <>
             {isOpen && (
               <>
-                <TimeSlots>
+                <TimeSlots ref={timeSlotsRef}>
                   <StyledParagraph $textcolor={textColor}>
                     Available Time Slots for {selectedDate}
                   </StyledParagraph>
@@ -252,7 +318,21 @@ const CustomCalendar = memo(({ onDateSelect }) => {
                       <li key={time}>
                         <button
                           onClick={() => handleTimeSelect(time)}
-                          disabled={!isTimeSlotAvailable(selectedDate, time)}
+                          disabled={!isTimeSlotAvailable(selectedDate, time)} // Disable if the slot is booked
+                          style={{
+                            backgroundColor: !isTimeSlotAvailable(
+                              selectedDate,
+                              time
+                            )
+                              ? "gray"
+                              : "rgba(0, 123, 255, 0.8)", // Gray out booked slots
+                            color: !isTimeSlotAvailable(selectedDate, time)
+                              ? "#fff"
+                              : "#000", // Adjust text color for contrast
+                            cursor: !isTimeSlotAvailable(selectedDate, time)
+                              ? "not-allowed"
+                              : "pointer", // Change cursor for disabled slots
+                          }}
                         >
                           {time}
                         </button>
@@ -260,12 +340,20 @@ const CustomCalendar = memo(({ onDateSelect }) => {
                     ))}
                   </ul>
                 </TimeSlots>
-                <BookingForm
-                  selectedDate={selectedDate}
-                  selectedTime={selectedTime}
-                  onBook={handleBookingComplete}
-                  setSuccessMessage={setSuccessMessage}
-                />
+                {selectedTime && (
+                  <BookingForm
+                    selectedDate={selectedDate}
+                    selectedTime={selectedTime}
+                    setSelectedTime={setSelectedTime} // Pass the setter function
+                    onBook={handleBookingComplete}
+                    setSuccessMessage={setSuccessMessage}
+                    availability={availability[selectedDate]}
+                    formRef={formRef}
+                  />
+                )}
+                {successMessage && (
+                  <SuccessMessage>{successMessage}</SuccessMessage>
+                )}
               </>
             )}
           </>
@@ -273,7 +361,7 @@ const CustomCalendar = memo(({ onDateSelect }) => {
       </CalendarContainer>
     </>
   );
-});
+};
 
 const StyledCalendar = styled(Calendar)`
   &.react-calendar {
@@ -290,6 +378,9 @@ const StyledCalendar = styled(Calendar)`
     font-weight: bold;
     text-shadow: 2px 2px 4px rgba(136, 135, 135, 0.7); /* Optional shadow for better readability */
     font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 1; /* Ensure it appears above other elements */
   }
 
   .react-calendar__navigation {
@@ -358,6 +449,8 @@ const StyledCalendar = styled(Calendar)`
   .react-calendar__tile:hover:not(:disabled) {
     background-color: #4188cf;
     color: #ebecf1;
+    cursor: pointer;
+    transform: scale(1.05);
   }
 
   .react-calendar__tile--active {
@@ -393,11 +486,10 @@ export const CalendarContainer = styled.section`
   flex-direction: column;
   width: 100%;
   max-width: 100%;
-  height: 100vh;
-  min-height: 100vh;
+  min-height: 100vh; /* Ensure it takes up the full viewport height */
   margin: 0 auto;
   gap: 20px;
-  overflow-y: auto;
+  overflow-y: auto; /* Allow scrolling if content overflows */
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -407,8 +499,8 @@ export const CalendarContainer = styled.section`
   font-weight: bold;
   text-align: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  position: relative;
-  z-index: 1; /* Ensure it appears above the background */
+  z-index: 1; /* Ensure it appears above other elements */
+
 `;
 
 export const TimeSlots = styled.div`

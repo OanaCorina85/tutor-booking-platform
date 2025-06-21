@@ -99,6 +99,7 @@ const Container = styled.section`
   height: 100vh;
   flex-direction: column;
   margin: 0;
+  margin-top: 50px;
   align-items: center;
   justify-content: center;
   gap: 10px;

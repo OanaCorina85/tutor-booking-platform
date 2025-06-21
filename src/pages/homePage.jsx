@@ -1,43 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import Navbar from "../components/navBar";
 import Footer from "../components/footer";
 import CustomCalendar from "../components/calendar"; // Calendar component
-import BookingForm from "../pages/bookingForm"; // BookingForm component
 import Contact from "../components/contact"; // Contact component
 import { AboutMeContainer, AvatarImg } from "../components/aboutMe";
-import {
-  CalendarContainer,
-  SuccessMessage
-} from "../components/calendar"; // CalendarContainer component
+import CalendarContainer from "../components/calendar"; // CalendarContainer component
 
 const HomePage = () => {
-  const [selectedDate, setSelectedDate] = useState(null); // State to store selected date
-  const [selectedTime, setSelectedTime] = useState(null); // State to store selected time
   const [showVideo, setShowVideo] = useState(false); // State to control video visibility
-  const [appointments, setAppointments] = useState([]); // State to store appointments
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // Memoizează funcția loadAppointments cu useCallback
-  const loadAppointments = useCallback(() => {
-    return JSON.parse(localStorage.getItem("appointments")) || [];
-  }, []);
-
-  useEffect(() => {
-    loadAppointments(); // Apelează funcția memoizată
-  }, [loadAppointments]); // Adaugă loadAppointments în array-ul de dependențe
-
-  // Save a new booking to localStorage
-  const handleBooking = (date, time) => {
-    const newAppointment = {
-      date: date.toLocaleDateString(),
-      time,
-      client: "Client Name",
-    };
-    const updatedAppointments = [...appointments, newAppointment];
-    setAppointments(updatedAppointments);
-    localStorage.setItem("appointments", JSON.stringify(updatedAppointments));
-  };
 
   return (
     <>
@@ -75,20 +46,7 @@ const HomePage = () => {
           </p>
         </AboutMeContainer>
         <CalendarContainer id="bookings">
-          <CustomCalendar onDateSelect={(date) =>{
-            setSelectedDate(date);
-            setSelectedTime(null);
-          }}
-          />
-          {selectedDate && selectedTime && (
-            <BookingForm
-              selectedDate={selectedDate}
-              selectedTime={selectedTime}
-              onBook={handleBooking}
-              setSuccessMessage={setSuccessMessage} // Pass the function here
-            />
-          )}
-          {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+          <CustomCalendar/>
         </CalendarContainer>
         <Contact id="contact" />
         <Footer />
